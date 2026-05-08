@@ -130,6 +130,8 @@
         <div class="text-left">
             <div class="text-[10px] text-blue-300">STAGE <span id="stage-display">1</span></div>
             <div class="text-xl font-bold text-yellow-400 leading-tight"><span id="score-display">0</span></div>
+            <!-- 그만하기 버튼 추가 -->
+            <button onclick="confirmQuit()" class="text-[10px] bg-red-900/50 text-red-300 px-2 py-0.5 rounded mt-1 border border-red-800/50 active:bg-red-800">그만하기</button>
         </div>
         <div class="flex flex-col items-center">
             <div id="lives-display" class="text-base tracking-tighter">❤️❤️❤️❤️❤️</div>
@@ -169,6 +171,18 @@
             </div>
             <!-- 태블릿 터치 반응성 개선을 위한 ontouchend 추가 -->
             <button onclick="showRanking(event)" ontouchend="showRanking(event)" class="mt-6 w-full text-gray-400 font-bold text-sm underline underline-offset-4 py-2">명예의 전당 보기</button>
+        </div>
+    </div>
+
+    <!-- 그만하기 확인 모달 -->
+    <div id="quit-confirm-modal" class="fixed inset-0 modal hidden flex items-center justify-center z-[70] p-6">
+        <div class="bg-white text-gray-800 p-8 rounded-[2.5rem] max-w-xs w-full text-center shadow-2xl border-4 border-red-100">
+            <h2 class="text-xl font-bold text-red-600 mb-2">게임 중단</h2>
+            <p class="text-gray-500 text-sm mb-6">정말로 그만하시겠습니까?<br>현재까지의 점수가 사라집니다.</p>
+            <div class="flex gap-3">
+                <button onclick="cancelQuit()" class="flex-1 bg-gray-200 text-gray-600 p-3 rounded-xl font-bold">계속하기</button>
+                <button onclick="location.reload()" class="flex-1 bg-red-500 text-white p-3 rounded-xl font-bold">그만하기</button>
+            </div>
         </div>
     </div>
 
@@ -320,7 +334,9 @@
         function initGame(topic) {
             currentTopic = topic; score = 0; stage = 1; lives = 5; 
             maxTime = (topic === 4 ? 120 : 70); timeLeft = maxTime;
-            isPaused = false; document.getElementById('start-modal').classList.add('hidden');
+            isPaused = false; 
+            document.getElementById('start-modal').classList.add('hidden');
+            document.getElementById('result-modal').classList.add('hidden');
             generateMap();
             if(timerId) clearInterval(timerId);
             timerId = setInterval(() => {
@@ -330,6 +346,20 @@
                 document.getElementById('timer-bar').style.width = (timeLeft / maxTime * 100) + "%";
                 if(timeLeft <= 0) endGame("시간이 초과되었습니다!");
             }, 1000);
+        }
+
+        function confirmQuit() {
+            if(isPaused && !document.getElementById('start-modal').classList.contains('hidden')) return;
+            isPaused = true;
+            document.getElementById('quit-confirm-modal').classList.remove('hidden');
+        }
+
+        function cancelQuit() {
+            document.getElementById('quit-confirm-modal').classList.add('hidden');
+            // 퀴즈 창이 떠있는 상태가 아니라면 일시정지 해제
+            if(document.getElementById('quiz-modal').classList.contains('hidden')) {
+                isPaused = false;
+            }
         }
 
         function endGame(msg) { clearInterval(timerId); isPaused = true; document.getElementById('result-modal').classList.remove('hidden'); document.getElementById('result-msg').innerText = msg; document.getElementById('final-score').innerText = score; }
